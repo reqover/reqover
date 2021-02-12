@@ -2,10 +2,9 @@ import {NextFunction, Request, Response} from 'express';
 import swaggerParser from '@apidevtools/swagger-parser';
 import UrlPattern from 'url-pattern';
 import {spec} from '../app';
+import {SWAGGER_SPEC_URL} from '../config/constants';
 
 class AuthController {
-    private readonly SWAGGER_SPEC = process.env.SWAGGER_SPEC || 'https://petstore.swagger.io/v2/swagger.json';
-
     public specs = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             res.send(spec);
@@ -16,7 +15,7 @@ class AuthController {
 
     public info = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const apiList = await this.getSwaggerPaths(this.SWAGGER_SPEC);
+            const apiList = await this.getSwaggerPaths(SWAGGER_SPEC_URL);
             res.send(apiList);
         } catch (error) {
             next(error);
@@ -25,7 +24,7 @@ class AuthController {
 
     public report = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const reportData = await this.getCoverageReport(this.SWAGGER_SPEC);
+            const reportData = await this.getCoverageReport(SWAGGER_SPEC_URL);
             res.render('index', {data: reportData});
         } catch (error) {
             next(error);
@@ -34,7 +33,7 @@ class AuthController {
 
     public coverage = async (req: any, res: Response, next: NextFunction): Promise<void> => {
         try {
-            res.send(await this.getCoverageReport(this.SWAGGER_SPEC));
+            res.send(await this.getCoverageReport(SWAGGER_SPEC_URL));
         } catch (error) {
             next(error);
         }
@@ -42,23 +41,21 @@ class AuthController {
 
     private getSwaggerPaths = async (swaggerSpec: any) => {
         const swaggerInfo: any = await swaggerParser.validate(swaggerSpec);
-        const basePath = swaggerInfo.basePath;
-        const apiPaths = Object.entries(swaggerInfo.paths);
+        const {basePath, paths} = swaggerInfo;
+        const apiPaths = Object.entries(paths);
 
         const apiList = apiPaths.map(([apiPath, value]) => {
             const methods = Object.entries(value).map(([methodName, data]) => {
+                const {responses, parameters} = data;
                 return {
                     path: `${basePath}${apiPath}`,
                     name: methodName.toUpperCase(),
-                    responses: Object.keys(data.responses),
-                    parameters: data.parameters,
+                    responses: Object.keys(responses),
+                    parameters,
                 };
             });
 
-            return {
-                path: `${basePath}${apiPath}`,
-                methods: methods,
-            };
+            return {path: `${basePath}${apiPath}`, methods};
         });
 
         return apiList;
@@ -71,23 +68,19 @@ class AuthController {
             const coveredApis = this.findCoveredApis(apiItem);
 
             const coveredMethods = apiItem.methods.map((method) => {
-                const coveredMethods: any = coveredApis.filter((c) => c.method == method.name);
+                const {name, responses, parameters} = method;
+                const coveredMethods: any = coveredApis.filter((c) => c.method == name);
                 const coveredStatusCodes = [...new Set(coveredMethods.map((m) => m.response))];
-                const missingStatusCodes = method.responses.filter((s) => !coveredStatusCodes.includes(s));
+                const missingStatusCodes = responses.filter((s) => !coveredStatusCodes.includes(s));
 
                 const coveredParameters = coveredMethods
                     .map((m) => {
                         return m.parameters.map((p) => p.name);
                     })
                     .flat();
-                const missingParameters = method.parameters
-                    .map((p) => {
-                        return {
-                            name: p.name,
-                            required: p.required,
-                            in: p.in,
-                            type: p.type,
-                        };
+                const missingParameters = parameters
+                    .map(({name, required, type, ...p}) => {
+                        return {name, required, in: p.in, type};
                     })
                     .map((mp) => mp.name)
                     .filter((m) => !coveredParameters.includes(m));
@@ -95,17 +88,13 @@ class AuthController {
                 const coverage = ((coveredStatusCodes.length / (coveredStatusCodes.length + missingStatusCodes.length)) * 100).toFixed();
 
                 let status = 'danger';
-                if (+coverage > 0 && +coverage < 100) {
-                    status = 'warning';
-                } else {
-                    status = 'success';
-                }
+                status = +coverage > 0 && +coverage < 100 ? 'warning' : 'success';
 
                 return {
                     path: apiItem['path'],
-                    method: method.name,
-                    coverage: coverage,
-                    status: status,
+                    method: name,
+                    coverage,
+                    status,
                     responses: {
                         missed: missingStatusCodes,
                         covered: coveredStatusCodes,
@@ -124,11 +113,10 @@ class AuthController {
     };
 
     private regExMatchOfPath = (apiPath: string, rPath: string) => {
-        const pattern = new UrlPattern(apiPath.replace(/\/{/g, '{/:'), {
+        return new UrlPattern(apiPath.replace(/\/{/g, '{/:'), {
             optionalSegmentStartChar: '{',
             optionalSegmentEndChar: '}',
-        });
-        return pattern.match(rPath);
+        }).match(rPath);
     };
 
     private findCoveredApis = (apiItem: any) => {

@@ -5,8 +5,7 @@ import morgan from 'morgan';
 import compression from 'compression';
 import {logger} from './utils/logger';
 import {createProxyMiddleware} from 'http-proxy-middleware';
-
-const API_SERVICE_URL = process.env.API_SERVICE_URL || 'https://petstore.swagger.io';
+import {API_SERVICE_URL} from './config/constants';
 
 export const spec = [];
 
@@ -18,8 +17,8 @@ class App {
     constructor(routes: any[]) {
         this.app = express();
         this.app.set('view engine', 'ejs');
-        this.port = process.env.PORT || 3000;
-        this.env = process.env.NODE_ENV || 'development';
+        this.port = process.env.PORT;
+        this.env = process.env.NODE_ENV;
 
         this.initializeMiddlewares();
         this.initializeRoutes(routes);
