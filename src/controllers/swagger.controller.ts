@@ -2,7 +2,7 @@ import {NextFunction, Request, Response} from 'express';
 import swaggerParser from '@apidevtools/swagger-parser';
 import UrlPattern from 'url-pattern';
 import {spec} from '../app';
-import {SWAGGER_SPEC_URL} from '../config/constants';
+import {SWAGGER_BASE_PATH, SWAGGER_SPEC_URL} from '../config/constants';
 
 class AuthController {
     public specs = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -45,17 +45,23 @@ class AuthController {
         const apiPaths = Object.entries(paths);
 
         const apiList = apiPaths.map(([apiPath, value]) => {
+            let path = `${apiPath}`;
+            if (!basePath) {
+                path = `${SWAGGER_BASE_PATH}${apiPath}`;
+            }
+
             const methods = Object.entries(value).map(([methodName, data]) => {
                 const {responses, parameters} = data;
+
                 return {
-                    path: `${basePath}${apiPath}`,
+                    path: path,
                     name: methodName.toUpperCase(),
                     responses: Object.keys(responses),
-                    parameters,
+                    parameters: parameters ? parameters : [],
                 };
             });
 
-            return {path: `${basePath}${apiPath}`, methods};
+            return {path: path, methods};
         });
 
         return apiList;
