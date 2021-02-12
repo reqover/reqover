@@ -63,9 +63,10 @@ class AuthController {
 
     private getCoverageReport = async (swaggerSpec: any) => {
         const apiList = await this.getSwaggerPaths(swaggerSpec);
+        const swaggerUrls = apiList.map((u: any) => u.path);
 
         const apiCovList: any = apiList.map((apiItem) => {
-            const coveredApis = this.findCoveredApis(apiItem);
+            const coveredApis = this.findCoveredApis(apiItem, swaggerUrls);
 
             const coveredMethods = apiItem.methods.map((method) => {
                 const {name, responses, parameters} = method;
@@ -119,11 +120,21 @@ class AuthController {
         }).match(rPath);
     };
 
-    private findCoveredApis = (apiItem: any) => {
+    private findCoveredApis = (apiItem: any, swaggerUrls: any) => {
+        const apiPath = apiItem['path'];
         return spec.filter((path) => {
-            return this.regExMatchOfPath(apiItem['path'], path['path']);
+            const currentPath = path['path'];
+            if (apiPath != currentPath && this.isSwaggerUrl(swaggerUrls, currentPath)) {
+                return false;
+            }
+
+            return this.regExMatchOfPath(apiPath, currentPath);
         });
     };
+
+    private isSwaggerUrl(swaggerUrls, path): boolean {
+        return swaggerUrls.includes(path);
+    }
 }
 
 export default AuthController;
