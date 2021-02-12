@@ -17,3 +17,5 @@ Open your browser:
 ```
 http://localhost:3000/report
 ```
+
+![Swagger Coverage Report](.github/cov.png)
