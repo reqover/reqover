@@ -1,10 +1,11 @@
 import {NextFunction, Request, Response} from 'express';
 import swaggerParser from '@apidevtools/swagger-parser';
 import UrlPattern from 'url-pattern';
+import merge from 'deepmerge';
 import {spec} from '../app';
 import {SWAGGER_BASE_PATH, SWAGGER_SPEC_URL} from '../config/constants';
 
-class AuthController {
+class SwaggerController {
     public specs = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             res.send(spec);
@@ -13,8 +14,8 @@ class AuthController {
         }
     };
 
-    public reset = async(req: Request, res: Response, next: NextFunction): Promise<void> => {
-        spec.length =  0;
+    public reset = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        spec.length = 0;
         res.send({status: 'done'});
     };
 
@@ -86,11 +87,15 @@ class AuthController {
                 const coveredStatusCodes = [...new Set(coveredMethodNames.map((m) => m.response))];
                 const missingStatusCodes = responses.filter((s) => !coveredStatusCodes.includes(s));
 
-                const coveredParameters = [...new Set(coveredMethodNames
-                    .map((m) => {
-                        return m.parameters.map((p) => p.name);
-                    })
-                    .flat())];
+                const coveredParameters = [
+                    ...new Set(
+                        coveredMethodNames
+                            .map((m) => {
+                                return m.parameters.map((p) => p.name);
+                            })
+                            .flat(),
+                    ),
+                ];
                 const missingParameters = parameters
                     .map(({name, required, type, ...p}) => {
                         return {name, required, in: p.in, type};
@@ -103,11 +108,11 @@ class AuthController {
                 let status = 'danger';
                 status = +coverage > 0 && +coverage < 100 ? 'warning' : 'success';
 
-                let requestsCount = 0
-                let bodies = []
-                if(coveredMethodNames.length > 0){
-                    requestsCount = coveredApis.length
-                    bodies = coveredApis.map(ca => ca.body)
+                let requestsCount = 0;
+                let body = {};
+                if (coveredMethodNames.length > 0) {
+                    requestsCount = coveredApis.length;
+                    body = this.mergeBody(coveredApis.map((ca) => ca.body));
                 }
 
                 return {
@@ -124,7 +129,7 @@ class AuthController {
                         missed: missingParameters,
                         covered: coveredParameters,
                     },
-                    bodies: bodies
+                    bodies: [body],
                 };
             });
 
@@ -143,30 +148,55 @@ class AuthController {
 
     private findCoveredApis = (apiItem: any, swaggerUrls: any) => {
         const apiPath = apiItem['path'];
-        return spec.filter((path) => {
-            const currentPath = path['path'];
-            if (apiPath != currentPath && this.isSwaggerUrl(swaggerUrls, currentPath)) {
-                return false;
-            }
+        return spec
+            .filter((path) => {
+                const currentPath = path['path'];
+                if (apiPath != currentPath && this.isSwaggerUrl(swaggerUrls, currentPath)) {
+                    return false;
+                }
 
-            return this.regExMatchOfPath(apiPath, currentPath);
-        }).map(api => {
-            console.log()
-            const currentPath = api['path'];
-            const match =  this.regExMatchOfPath(apiPath, currentPath);
-            if(match){
-                api.parameters.push(...Object.keys(match).map(k => {return { name: k }}))
-            }
+                return this.regExMatchOfPath(apiPath, currentPath);
+            })
+            .map((api) => {
+                console.log();
+                const currentPath = api['path'];
+                const match = this.regExMatchOfPath(apiPath, currentPath);
+                if (match) {
+                    api.parameters.push(
+                        ...Object.keys(match).map((k) => {
+                            return {name: k};
+                        }),
+                    );
+                }
 
-            return {
-                ...api
-            }
-        });
+                return {
+                    ...api,
+                };
+            });
     };
 
     private isSwaggerUrl(swaggerUrls, path): boolean {
         return swaggerUrls.includes(path);
     }
+
+    private mergeBody(bodies: any[]) {
+        const combineMerge = (target, source, options) => {
+            const destination = target.slice();
+
+            source.forEach((item, index) => {
+                if (typeof destination[index] === 'undefined') {
+                    destination[index] = options.cloneUnlessOtherwiseSpecified(item, options);
+                } else if (options.isMergeableObject(item)) {
+                    destination[index] = merge(target[index], item, options);
+                } else if (target.indexOf(item) === -1) {
+                    destination.push(item);
+                }
+            });
+            return destination;
+        };
+
+        return merge.all(bodies, {arrayMerge: combineMerge});
+    }
 }
 
-export default AuthController;
+export default SwaggerController;
