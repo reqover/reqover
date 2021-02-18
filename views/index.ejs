@@ -34,10 +34,14 @@
                                     data-bs-target="#collapse-<%= index %>" aria-expanded="true"
                                     aria-controls="collapse-<%= index %>">
                                     <div class="row w-100">
-                                        <div class="col-9 api-path"><span>
+                                        <div class="col-7 api-path">
+                                            <span>
                                                 <%= item.method %>
                                             </span>
                                             <%= item.path %>
+                                        </div>
+                                        <div class="col-2">
+                                            <%= item.requests %> calls
                                         </div>
                                         <div class="col-2">
                                             <div class="progress">
@@ -81,7 +85,7 @@
                                                 <%});%>
                                         </ul>
                                     </div>
-                                    <% if (item.parameters.missed.length> 0 || item.parameters.covered > 0) { %>
+                                    <% if (item.parameters.missed.length > 0 || item.parameters.covered.length > 0) { %>
                                         <div class="card mt-3">
                                             <div class="card-header">Parameters:</div>
                                             <ul class="list-group list-group-flush">
@@ -114,6 +118,19 @@
                                             </ul>
                                         </div>
                                         <% } %>
+
+                                        <% if (item.bodies.length > 0) { %>
+                                            <div class="card mt-3">
+                                                <div class="card-header">Request body:</div>
+                                                <ul class="list-group list-group-flush">
+                                                    <% item.bodies.forEach(function(body) { %>
+                                                        <li class="list-group-item list-group-item-success">
+                                                             <pre><%= JSON.stringify(body, null, 2) %></pre>
+                                                        </li>
+                                                        <%});%>
+                                                </ul>
+                                            </div>
+                                            <% } %>
                                 </div>
                             </div>
                         </div>

@@ -13,6 +13,11 @@ class AuthController {
         }
     };
 
+    public reset = async(req: Request, res: Response, next: NextFunction): Promise<void> => {
+        spec.length =  0;
+        res.send({status: 'done'});
+    };
+
     public info = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const apiList = await this.getSwaggerPaths(SWAGGER_SPEC_URL);
@@ -76,15 +81,16 @@ class AuthController {
 
             const coveredMethods = apiItem.methods.map((method) => {
                 const {name, responses, parameters} = method;
-                const coveredMethods: any = coveredApis.filter((c) => c.method == name);
-                const coveredStatusCodes = [...new Set(coveredMethods.map((m) => m.response))];
+                const coveredMethodNames: any = coveredApis.filter((c) => c.method == name);
+
+                const coveredStatusCodes = [...new Set(coveredMethodNames.map((m) => m.response))];
                 const missingStatusCodes = responses.filter((s) => !coveredStatusCodes.includes(s));
 
-                const coveredParameters = coveredMethods
+                const coveredParameters = [...new Set(coveredMethodNames
                     .map((m) => {
                         return m.parameters.map((p) => p.name);
                     })
-                    .flat();
+                    .flat())];
                 const missingParameters = parameters
                     .map(({name, required, type, ...p}) => {
                         return {name, required, in: p.in, type};
@@ -97,8 +103,16 @@ class AuthController {
                 let status = 'danger';
                 status = +coverage > 0 && +coverage < 100 ? 'warning' : 'success';
 
+                let requestsCount = 0
+                let bodies = []
+                if(coveredMethodNames.length > 0){
+                    requestsCount = coveredApis.length
+                    bodies = coveredApis.map(ca => ca.body)
+                }
+
                 return {
                     path: apiItem['path'],
+                    requests: requestsCount,
                     method: name,
                     coverage,
                     status,
@@ -110,6 +124,7 @@ class AuthController {
                         missed: missingParameters,
                         covered: coveredParameters,
                     },
+                    bodies: bodies
                 };
             });
 
@@ -135,6 +150,17 @@ class AuthController {
             }
 
             return this.regExMatchOfPath(apiPath, currentPath);
+        }).map(api => {
+            console.log()
+            const currentPath = api['path'];
+            const match =  this.regExMatchOfPath(apiPath, currentPath);
+            if(match){
+                api.parameters.push(...Object.keys(match).map(k => {return { name: k }}))
+            }
+
+            return {
+                ...api
+            }
         });
     };
 
