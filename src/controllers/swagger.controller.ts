@@ -109,10 +109,10 @@ class SwaggerController {
                 status = +coverage > 0 && +coverage < 100 ? 'warning' : 'success';
 
                 let requestsCount = 0;
-                let body = {};
+                let bodies = [];
                 if (coveredMethodNames.length > 0) {
                     requestsCount = coveredApis.length;
-                    body = this.mergeBody(coveredApis.map((ca) => ca.body));
+                    bodies = coveredApis.map((ca) => ca.body);
                 }
 
                 return {
@@ -129,7 +129,8 @@ class SwaggerController {
                         missed: missingParameters,
                         covered: coveredParameters,
                     },
-                    bodies: [body],
+                    bodies: bodies,
+                    mergedBody: this.mergeBody(bodies)
                 };
             });
 

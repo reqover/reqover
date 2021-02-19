@@ -121,16 +121,14 @@
 
                                         <% if (item.bodies.length > 0) { %>
                                             <div class="card mt-3">
-                                                <div class="card-header">Request body:</div>
+                                                <div class="card-header">Merged Request body:</div>
                                                 <ul class="list-group list-group-flush">
-                                                    <% item.bodies.forEach(function(body) { %>
                                                         <li class="list-group-item list-group-item-success">
-                                                             <pre><%= JSON.stringify(body, null, 2) %></pre>
+                                                             <pre><%= JSON.stringify(item.mergedBody, null, 2) %></pre>
                                                         </li>
-                                                        <%});%>
                                                 </ul>
                                             </div>
-                                            <% } %>
+                                        <% } %>
                                 </div>
                             </div>
                         </div>
