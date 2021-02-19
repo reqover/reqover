@@ -1,0 +1,61 @@
+@url = http://localhost:3000/api/v3
+
+### POST pet
+POST  {{url}}/pet
+content-type: application/json
+
+{
+  "id": 1,
+  "category": {
+    "id": 1,
+    "name": "sdfsdf"
+  },
+  "name": "doggie",
+  "foo": "bar",
+  "photoUrls": [
+    "string"
+  ],
+  "tags": [
+    {
+      "id": 1,
+      "name": "string"
+    }
+  ],
+  "status": "available"
+}
+
+### GET pet by id
+GET  {{url}}/pet/1
+content-type: application/json
+
+### PUT pet
+PUT  {{url}}/pet/1
+content-type: application/json
+
+{
+    "id":1,
+    "category": {
+        "name": "test update"
+    },
+    "name": "BobUpdate",
+    "photoUrls": [
+        "string"
+    ],
+    "tags": [
+        {
+      "id": 0,
+      "name": "bestTagUpdate"
+    }
+    ],
+    "status": "sold"
+}
+
+### GET findByStatus
+GET  {{url}}/pet/findByStatus?status=available
+content-type: application/json
+
+### DELETE pet by id
+DELETE {{url}}/pet/1
+content-type: application/json
+
+

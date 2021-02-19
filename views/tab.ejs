@@ -1,0 +1,5 @@
+<div class="accordion" id="accordionExample">
+    <% apiList.forEach(function(item, index) { %>
+        <%- include('accordion', {item: item, index: index});%>
+    <%});%>
+</div>
