@@ -150,6 +150,7 @@ class SwaggerController {
         return new UrlPattern(apiPath.replace(/\/{/g, '{/:'), {
             optionalSegmentStartChar: '{',
             optionalSegmentEndChar: '}',
+            segmentNameCharset: 'a-zA-Z0-9_-',
         }).match(rPath);
     };
 
