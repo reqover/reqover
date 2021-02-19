@@ -109,24 +109,10 @@ class SwaggerController {
                 status = +coverage > 0 && +coverage < 100 ? 'warning' : 'success';
 
                 let requestsCount = 0;
-<<<<<<< HEAD
-<<<<<<< HEAD
-                let body = {};
-                if (coveredMethodNames.length > 0) {
-                    requestsCount = coveredApis.length;
-                    body = this.mergeBody(coveredApis.map((ca) => ca.body));
-=======
                 let bodies = [];
                 if (coveredMethodNames.length > 0) {
                     requestsCount = coveredApis.length;
                     bodies = coveredApis.map((ca) => ca.body);
->>>>>>> upstream/master
-=======
-                let bodies = [];
-                if (coveredMethodNames.length > 0) {
-                    requestsCount = coveredApis.length;
-                    bodies = coveredApis.map((ca) => ca.body);
->>>>>>> 94ec9071752948498c5ece0a235753e9e6321b44
                 }
 
                 return {
@@ -143,17 +129,8 @@ class SwaggerController {
                         missed: missingParameters,
                         covered: coveredParameters,
                     },
-<<<<<<< HEAD
-<<<<<<< HEAD
-                    bodies: [body],
-=======
                     bodies: bodies,
-                    mergedBody: this.mergeBody(bodies)
->>>>>>> upstream/master
-=======
-                    bodies: bodies,
-                    mergedBody: this.mergeBody(bodies)
->>>>>>> 94ec9071752948498c5ece0a235753e9e6321b44
+                    mergedBody: this.mergeBody(bodies),
                 };
             });
 
@@ -163,10 +140,10 @@ class SwaggerController {
         const result = apiCovList.flat();
         return {
             all: result,
-            missing: result.filter(res => res.coverage == 0),
-            partial: result.filter(res => res.coverage != 0 && res.coverage < 100),
-            full: result.filter(res => res.coverage == 100),
-        }
+            missing: result.filter((res) => res.coverage == 0),
+            partial: result.filter((res) => res.coverage != 0 && res.coverage < 100),
+            full: result.filter((res) => res.coverage == 100),
+        };
     };
 
     private regExMatchOfPath = (apiPath: string, rPath: string) => {

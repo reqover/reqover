@@ -25,9 +25,7 @@ content-type: application/json
 }
 
 ### GET pet by id
-GET  {{url}}/pet/1
-content-type: application/json
-
+GET  {{url}}/pet/1?sdf=345
 ### PUT pet
 PUT  {{url}}/pet/1
 content-type: application/json
