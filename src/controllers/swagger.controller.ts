@@ -110,6 +110,7 @@ class SwaggerController {
 
                 let requestsCount = 0;
 <<<<<<< HEAD
+<<<<<<< HEAD
                 let body = {};
                 if (coveredMethodNames.length > 0) {
                     requestsCount = coveredApis.length;
@@ -120,6 +121,12 @@ class SwaggerController {
                     requestsCount = coveredApis.length;
                     bodies = coveredApis.map((ca) => ca.body);
 >>>>>>> upstream/master
+=======
+                let bodies = [];
+                if (coveredMethodNames.length > 0) {
+                    requestsCount = coveredApis.length;
+                    bodies = coveredApis.map((ca) => ca.body);
+>>>>>>> 94ec9071752948498c5ece0a235753e9e6321b44
                 }
 
                 return {
@@ -137,11 +144,16 @@ class SwaggerController {
                         covered: coveredParameters,
                     },
 <<<<<<< HEAD
+<<<<<<< HEAD
                     bodies: [body],
 =======
                     bodies: bodies,
                     mergedBody: this.mergeBody(bodies)
 >>>>>>> upstream/master
+=======
+                    bodies: bodies,
+                    mergedBody: this.mergeBody(bodies)
+>>>>>>> 94ec9071752948498c5ece0a235753e9e6321b44
                 };
             });
 
